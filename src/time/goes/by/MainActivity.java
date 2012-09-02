@@ -2,6 +2,7 @@ package time.goes.by;
 
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -16,6 +17,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
@@ -32,23 +34,19 @@ public class MainActivity extends Activity {
 	private ParseHtml parseHtml;
 	private List<Map<String, String>> urlMapList;
 	private ListView listView;
-	private SimpleAdapter adapter;
+	private VoiceListAdapter adapter;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
         mContext = this;
+        setContentView(R.layout.activity_main);
         urlMapList = new ArrayList<Map<String,String>>();
         Button writeBtn = (Button) findViewById(R.id.writeBtn);
         writeBtn.setOnClickListener(new OnClickListener() {
 			
 			public void onClick(View v) {
-				String preStr = "http://www.51voa.com";
-				String urlStr = "http://www.51voa.com/VOA_Special_English/";
-				//myDownloadReference = download();
-				urlMapList = parseHtml.getDownloadList(urlStr);
-				adapter.notifyDataSetChanged();
+				
 				/*new Thread(new Runnable() {
 					
 					public void run() {
@@ -80,10 +78,15 @@ public class MainActivity extends Activity {
 		registerReceiver(receiver, filter);
 		
 		parseHtml = new ParseHtml();
+		HashMap<String, String> map = new HashMap<String, String>();
+		map.put(ParseHtml.TITLE, "name");
+		map.put(ParseHtml.CONTENT, "content");
+		urlMapList.add(map);
+		urlMapList.add(map);
+		urlMapList.add(map);
 		
 		listView = (ListView) findViewById(R.id.listview);
-		adapter = new SimpleAdapter(this, urlMapList, android.R.layout.simple_list_item_2,
-				new String[] { ParseHtml.TITLE, ParseHtml.CONTENT }, new int[] { android.R.id.text1, android.R.id.text2 });
+		adapter = new VoiceListAdapter(mContext, urlMapList, R.layout.voice_list_item);
 		listView.setAdapter(adapter);
 		
     }
@@ -106,8 +109,31 @@ public class MainActivity extends Activity {
     }
     
     @Override
+    public boolean onMenuItemSelected(int featureId, MenuItem item) {
+    	switch(featureId){
+    	case R.id.menu_settings:
+    		break;
+    	case R.id.menu_refresh:
+    		refreshList();
+    		break;
+    	default:
+    			
+    	}
+    	return super.onMenuItemSelected(featureId, item);
+    }
+    
+    @Override
     protected void onDestroy() {
     	unregisterReceiver(receiver);
     	super.onDestroy();
+    }
+    
+    public void refreshList(){
+    	String preStr = "http://www.51voa.com";
+		String urlStr = "http://www.51voa.com/VOA_Special_English/";
+		//myDownloadReference = download();
+		urlMapList.clear();
+		urlMapList.addAll(parseHtml.getDownloadList(urlStr));
+		adapter.notifyDataSetChanged();
     }
 }

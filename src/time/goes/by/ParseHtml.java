@@ -59,24 +59,26 @@ public class ParseHtml {
     	Elements aList = link.getElementsByTag("a");
     	int count = aList.size();
     	if (count==4) {
-    		for (int i = 0; i < count; i++) {
+    		for (int i = 1; i < count; i++) {
         		Element alink = aList.get(i);
         		String urlstr = alink.attr("href");
         		urlMap.put(has4Item[i], preStr+urlstr);        		
     		}
 		} else if (count==3) {
-			for (int i = 0; i < count; i++) {
+			for (int i = 1; i < count; i++) {
         		Element alink = aList.get(i);
         		String urlstr = alink.attr("href");
         		urlMap.put(has3Item[i], preStr+urlstr);
     		}
 		} else if (count==2) {
-			for (int i = 0; i < count; i++) {
+			for (int i = 1; i < count; i++) {
         		Element alink = aList.get(i);
         		String urlstr = alink.attr("href");
         		urlMap.put(has2Item[i], preStr+urlstr);
     		}
 		}
+    	//从第一个链接出获取类别
+    	urlMap.put(CONTENT, aList.get(0).ownText());
     	//从最后一个连接处获取文章标题
     	urlMap.put(TITLE, aList.get(count-1).ownText());
 		return urlMap;

@@ -2,5 +2,11 @@
     <item android:id="@+id/menu_settings"
         android:title="@string/menu_settings"
         android:orderInCategory="100"
-        android:showAsAction="never" />
+        android:icon="@android:drawable/ic_menu_set_as"
+        android:showAsAction="ifRoom|withText" />
+    <item android:id="@+id/menu_refresh"
+        android:title="@string/menu_refresh"
+        android:orderInCategory="100"
+        android:icon="@android:drawable/ic_menu_upload"
+        android:showAsAction="ifRoom|withText" />
 </menu>
