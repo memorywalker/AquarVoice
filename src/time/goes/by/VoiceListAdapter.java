@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.zip.Inflater;
 
+import time.goes.by.data.VoiceListItemData;
+
 import android.app.Service;
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -23,12 +25,12 @@ import android.widget.TextView;
  */
 public class VoiceListAdapter extends BaseAdapter {
 	LayoutInflater layoutInflater;
-	List<Map<String,String>> list;
+	List<Object> list;
 	private int layoutResID;
 	/**
 	 * 
 	 */
-	public VoiceListAdapter(Context context, List<Map<String,String>> list, 
+	public VoiceListAdapter(Context context, List<Object> list, 
 			int layoutResID) {
 		layoutInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 		this.list = list;
@@ -48,7 +50,7 @@ public class VoiceListAdapter extends BaseAdapter {
 	 */
 	public Object getItem(int position) {
 		// TODO Auto-generated method stub
-		return null;
+		return list.get(position);
 	}
 
 	/* (non-Javadoc)
@@ -74,9 +76,9 @@ public class VoiceListAdapter extends BaseAdapter {
 			holder = (ViewHolder) convertView.getTag();
 		}
 		
-		Map<String, String> map = list.get(position);
-		holder.titleView.setText(map.get(ParseHtml.TITLE));
-		holder.descriptView.setText(map.get(ParseHtml.CONTENT));
+		VoiceListItemData data = (VoiceListItemData) list.get(position);
+		holder.titleView.setText(data.title);
+		holder.descriptView.setText(data.type);
 		return convertView;
 	}
 

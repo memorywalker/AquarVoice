@@ -1,10 +1,14 @@
 package time.goes.by;
 
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import time.goes.by.data.DBHelper;
+import time.goes.by.data.VoiceListItemData;
 
 import android.net.Uri;
 import android.os.Bundle;
@@ -13,6 +17,7 @@ import android.app.Activity;
 import android.app.DownloadManager;
 import android.app.DownloadManager.Request;
 import android.content.BroadcastReceiver;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -20,10 +25,10 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.Button;
-import android.widget.LinearLayout;
 import android.widget.ListView;
-import android.widget.SimpleAdapter;
 import android.widget.Toast;
 
 public class MainActivity extends Activity {
@@ -32,7 +37,7 @@ public class MainActivity extends Activity {
 	private Context mContext;
 	private BroadcastReceiver receiver;
 	private ParseHtml parseHtml;
-	private List<Map<String, String>> urlMapList;
+	private List<Object> dataList;
 	private ListView listView;
 	private VoiceListAdapter adapter;
 
@@ -41,11 +46,15 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         mContext = this;
         setContentView(R.layout.activity_main);
-        urlMapList = new ArrayList<Map<String,String>>();
+        dataList = new ArrayList<Object>();
         Button writeBtn = (Button) findViewById(R.id.writeBtn);
         writeBtn.setOnClickListener(new OnClickListener() {
 			
 			public void onClick(View v) {
+				DBHelper dbHelper = new DBHelper(mContext);
+				dataList.clear();
+				dataList.addAll(dbHelper.getDataList());
+				adapter.notifyDataSetChanged();
 				
 				/*new Thread(new Runnable() {
 					
@@ -70,7 +79,6 @@ public class MainActivity extends Activity {
 				// when download is completed
 				if (reference == myDownloadReference) {
 					Toast.makeText(mContext, "Download ok", Toast.LENGTH_SHORT).show();
-					
 				}
 			}
 		};
@@ -78,26 +86,39 @@ public class MainActivity extends Activity {
 		registerReceiver(receiver, filter);
 		
 		parseHtml = new ParseHtml();
-		HashMap<String, String> map = new HashMap<String, String>();
-		map.put(ParseHtml.TITLE, "name");
-		map.put(ParseHtml.CONTENT, "content");
-		urlMapList.add(map);
-		urlMapList.add(map);
-		urlMapList.add(map);
-		
 		listView = (ListView) findViewById(R.id.listview);
-		adapter = new VoiceListAdapter(mContext, urlMapList, R.layout.voice_list_item);
+		adapter = new VoiceListAdapter(mContext, dataList, R.layout.voice_list_item);
 		listView.setAdapter(adapter);
+		
+		listView.setOnItemLongClickListener(new OnItemLongClickListener() {
+
+			public boolean onItemLongClick(AdapterView<?> parent, View view,
+					int position, long id) {
+				VoiceListItemData data = (VoiceListItemData) adapter.getItem(position);
+				myDownloadReference = download(data.contentURL, "AquarVoice", data.title.trim()+".mp3");
+				return false;
+			}
+		});
 		
     }
     
-    public long download(){
+    public long download(String urlStr, String path, String filename){
     	DownloadManager downloadManager = (DownloadManager)
     			getSystemService(Context.DOWNLOAD_SERVICE);
-    	String urlStr="http://down.51voa.com/201208/se-am-neil-armstrong-great-animal-orchestra-and-kris-allen-31aug12.mp3";
+		// urlStr="http://down.51voa.com/201208/se-am-neil-armstrong-great-animal-orchestra-and-kris-allen-31aug12.mp3";
+    	File downloadDir = Environment.getExternalStoragePublicDirectory(path);
+    	if (!downloadDir.exists()) {
+    		downloadDir.mkdirs();
+		}
+        
+    	
     	Uri uri = Uri.parse(urlStr);
     	DownloadManager.Request req = new Request(uri);
-    	req.setDestinationInExternalPublicDir(Environment.DIRECTORY_MUSIC, "voa.mp3");
+    	
+    	req.setDestinationInExternalPublicDir(path, filename);
+    	//req.setDestinationInExternalFilesDir(mContext, path, filename);
+    	req.setTitle(filename)
+    	.setShowRunningNotification(true);
     	//req.allowScanningByMediaScanner();
     	return downloadManager.enqueue(req);
     }
@@ -110,7 +131,7 @@ public class MainActivity extends Activity {
     
     @Override
     public boolean onMenuItemSelected(int featureId, MenuItem item) {
-    	switch(featureId){
+    	switch(item.getItemId()){
     	case R.id.menu_settings:
     		break;
     	case R.id.menu_refresh:
@@ -129,11 +150,13 @@ public class MainActivity extends Activity {
     }
     
     public void refreshList(){
-    	String preStr = "http://www.51voa.com";
 		String urlStr = "http://www.51voa.com/VOA_Special_English/";
-		//myDownloadReference = download();
-		urlMapList.clear();
-		urlMapList.addAll(parseHtml.getDownloadList(urlStr));
-		adapter.notifyDataSetChanged();
+		
+		DBHelper dbHelper = new DBHelper(mContext);
+		dbHelper.insertDataList(parseHtml.getDownloadDataList(urlStr));
+		Toast.makeText(mContext, "refresh completed!", Toast.LENGTH_SHORT).show();
+		
     }
+    
+    
 }

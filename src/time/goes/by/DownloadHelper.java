@@ -10,6 +10,8 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.List;
+import java.util.Map;
 
 
 import android.os.Environment;
@@ -127,4 +129,6 @@ public class DownloadHelper {
 		}
 		return retVal;
 	}
+	
+	
 }
