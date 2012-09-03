@@ -50,6 +50,7 @@ public class DBHelper extends SQLiteOpenHelper{
 	  KEY_VOICE_TITLE_COLUMN + " text not null, " +
 	  KEY_VOICE_TYPE_COLUMN + " text, " +
 	  KEY_CONTENT_URL_COLUMN + " text, " +
+	  KEY_LRC_URL_COLUMN + " text, " +
 	  KEY_TRANSLATE_URL_COLUMN + " text, " +
 	  KEY_VOICE_FILE_COLUMN + " text, " +
 	  KEY_CONTENT_FILE_COLUMN + " text, " +
@@ -110,9 +111,9 @@ public class DBHelper extends SQLiteOpenHelper{
 		return db.query(DATABASE_TABLE, columns, null, null, null, null, null);
 	}
 	
-	public List<VoiceListItemData> getDataList() {
+	public List<Object> getDataList() {
 		Cursor cursor = queryAllColumns();
-		List<VoiceListItemData> dataList = new ArrayList<VoiceListItemData>();
+		List<Object> dataList = new ArrayList<Object>();
 		
 		//find each columns index
 		int KEY_ID_INDEX = cursor.getColumnIndexOrThrow(KEY_ID);
@@ -156,7 +157,7 @@ public class DBHelper extends SQLiteOpenHelper{
 		return count;
 	}
 	
-	public void updateDownloadStatus(int id, int isDownload){
+	public void updateDownloadStatus(String id, int isDownload){
 		ContentValues newValues = new ContentValues();
 		newValues.put(KEY_IS_DOWNLOAD_COLUMN, isDownload);
 		String where = KEY_ID +"="+id;

@@ -12,11 +12,13 @@ import time.goes.by.data.VoiceListItemData;
 
 import android.app.Service;
 import android.content.Context;
+import android.opengl.Visibility;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.WebView.FindListener;
 import android.widget.BaseAdapter;
+import android.widget.RatingBar;
 import android.widget.TextView;
 
 /**
@@ -71,6 +73,7 @@ public class VoiceListAdapter extends BaseAdapter {
 			holder = new ViewHolder();
 			holder.titleView = (TextView) convertView.findViewById(R.id.title);
 			holder.descriptView = (TextView) convertView.findViewById(R.id.description);
+			holder.rateBar = (RatingBar) convertView.findViewById(R.id.ratingBar);
 			convertView.setTag(holder);
 		} else {
 			holder = (ViewHolder) convertView.getTag();
@@ -79,6 +82,11 @@ public class VoiceListAdapter extends BaseAdapter {
 		VoiceListItemData data = (VoiceListItemData) list.get(position);
 		holder.titleView.setText(data.title);
 		holder.descriptView.setText(data.type);
+		if (data.isDownload==1) {
+			holder.rateBar.setVisibility(View.VISIBLE);
+		} else {
+			holder.rateBar.setVisibility(View.GONE);
+		}
 		return convertView;
 	}
 
@@ -86,6 +94,7 @@ public class VoiceListAdapter extends BaseAdapter {
 	static class ViewHolder {
 		TextView titleView;
 		TextView descriptView;
+		RatingBar rateBar;
 	}
 
 }

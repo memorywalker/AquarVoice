@@ -68,5 +68,25 @@ public class ParseHtml {
 		}
 		return data;
     }
+    
+    /**
+     * get the real mp3 url from content page.
+     * @param contentURL
+     * @return
+     */
+    public static String getVoiceMP3Url(String contentURL){
+    	String mp3URL = "";
+    	Document doc = null;
+		try {
+			doc = Jsoup.connect(contentURL).get();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    	Element menubar = doc.getElementById("menubar");
+    	Elements aList = menubar.getElementsByTag("a");
+    	mp3URL = aList.get(0).attr("href");
+    	return mp3URL;
+    }
    
 }
