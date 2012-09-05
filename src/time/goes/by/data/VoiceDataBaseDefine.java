@@ -8,6 +8,8 @@ package time.goes.by.data;
  * @Date  Sep 2, 2012
  */
 public class VoiceDataBaseDefine {
+	public static final String MAP_KEY_MP3_FILE="PALY_FILE";
+	
 	public static final String MAP_KEY_TYPE = "TYPE";
 	public static final String MAP_KEY_LRC = "LRC";
 	public static final String MAP_KEY_TRANSLATE = "TRANSLATE";

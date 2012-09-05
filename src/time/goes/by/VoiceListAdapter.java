@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.zip.Inflater;
 
+import time.goes.by.data.DBHelper;
 import time.goes.by.data.VoiceListItemData;
 
 import android.app.Service;
@@ -19,6 +20,7 @@ import android.view.ViewGroup;
 import android.webkit.WebView.FindListener;
 import android.widget.BaseAdapter;
 import android.widget.RatingBar;
+import android.widget.RatingBar.OnRatingBarChangeListener;
 import android.widget.TextView;
 
 /**
@@ -29,11 +31,13 @@ public class VoiceListAdapter extends BaseAdapter {
 	LayoutInflater layoutInflater;
 	List<Object> list;
 	private int layoutResID;
+	private Context mContext;
 	/**
 	 * 
 	 */
 	public VoiceListAdapter(Context context, List<Object> list, 
 			int layoutResID) {
+		mContext = context;
 		layoutInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 		this.list = list;
 		this.layoutResID = layoutResID;
@@ -68,18 +72,30 @@ public class VoiceListAdapter extends BaseAdapter {
 	 */
 	public View getView(int position, View convertView, ViewGroup parent) {
 		ViewHolder holder = null;
+		final VoiceListItemData data = (VoiceListItemData) list.get(position);
 		if (convertView==null) {
 			convertView = layoutInflater.inflate(layoutResID, parent, false);
 			holder = new ViewHolder();
 			holder.titleView = (TextView) convertView.findViewById(R.id.title);
 			holder.descriptView = (TextView) convertView.findViewById(R.id.description);
 			holder.rateBar = (RatingBar) convertView.findViewById(R.id.ratingBar);
+			
+			holder.rateBar.setOnRatingBarChangeListener(new OnRatingBarChangeListener() {
+				
+				@Override
+				public void onRatingChanged(RatingBar ratingBar, float rating,
+						boolean fromUser) {
+					// TODO Auto-generated method stub
+					DBHelper dbHelper = new DBHelper(mContext);
+					dbHelper.updateRating(data.id, rating);
+					dbHelper.close();
+				}
+			});
 			convertView.setTag(holder);
 		} else {
 			holder = (ViewHolder) convertView.getTag();
 		}
 		
-		VoiceListItemData data = (VoiceListItemData) list.get(position);
 		holder.titleView.setText(data.title);
 		holder.descriptView.setText(data.type);
 		if (data.isDownload==1) {

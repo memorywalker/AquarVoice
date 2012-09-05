@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 import time.goes.by.data.DBHelper;
+import time.goes.by.data.VoiceDataBaseDefine;
 import time.goes.by.data.VoiceListItemData;
 
 import android.net.Uri;
@@ -27,6 +28,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.Button;
 import android.widget.ListView;
@@ -43,6 +45,8 @@ public class MainActivity extends Activity {
 	private VoiceListAdapter adapter;
 	VoiceListItemData currentItemData;
 	DBHelper dbHelper;
+	String fileName = "";
+	String filePath = "";
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -81,7 +85,9 @@ public class MainActivity extends Activity {
 				// when download is completed
 				if (reference == myDownloadReference) {
 					Toast.makeText(mContext, "Download ok", Toast.LENGTH_SHORT).show();
-					dbHelper.updateDownloadStatus(currentItemData.id, 1);
+					dbHelper.updateDownloadStatus(currentItemData.id, 1, filePath);
+					currentItemData.isDownload = 1;
+					currentItemData.voiceFile = filePath;
 				}
 			}
 		};
@@ -102,10 +108,43 @@ public class MainActivity extends Activity {
 				if (1==currentItemData.isDownload) {
 					Toast.makeText(mContext, "This Item has downloaded.", Toast.LENGTH_SHORT).show();
 				} else{
-					String mp3URL = ParseHtml.getVoiceMP3Url(currentItemData.contentURL);
-					myDownloadReference = download(mp3URL, "AquarVoice", currentItemData.title.trim()+".mp3");
+					String mp3URL = null;
+					//mp3 url has fetched or not.
+					if (currentItemData.mp3URL==null) {
+						mp3URL = ParseHtml.getVoiceMP3Url(currentItemData.contentURL);
+					} else {
+						mp3URL = currentItemData.mp3URL;
+					}
+					
+					if (mp3URL!=null) {
+						dbHelper.updateMP3URL(currentItemData.id, mp3URL);
+						currentItemData.mp3URL = mp3URL;
+						String path = "AquarVoice";
+						fileName = currentItemData.title.trim()+".mp3";
+						myDownloadReference = download(mp3URL, path, fileName);
+					} else {
+						Toast.makeText(mContext, "MP3 URL error!!!", Toast.LENGTH_SHORT).show();
+					}
+					
 				}
-				return false;
+				return true; //avoid OnItemClick
+			}
+		});
+		
+		listView.setOnItemClickListener(new OnItemClickListener() {
+
+			@Override
+			public void onItemClick(AdapterView<?> parent, View view,
+					int position, long id) {
+				currentItemData = (VoiceListItemData) adapter.getItem(position);
+				if (currentItemData.mp3URL!=null) {
+					Intent intent = new Intent(mContext, PlayActivity.class);
+					intent.putExtra(VoiceDataBaseDefine.MAP_KEY_MP3_FILE, currentItemData.voiceFile);
+					startActivity(intent);
+				} else {
+					Toast.makeText(mContext, "MP3 not downloaded yet!!!", Toast.LENGTH_SHORT).show();
+				}
+				
 			}
 		});
 		// post a task to read data list from database.
@@ -121,8 +160,8 @@ public class MainActivity extends Activity {
     	if (!downloadDir.exists()) {
     		downloadDir.mkdirs();
 		}
-        
-    	
+        //get the entire file path include the name.
+    	filePath = downloadDir.toString()+"/"+filename;
     	Uri uri = Uri.parse(urlStr);
     	DownloadManager.Request req = new Request(uri);
     	
@@ -156,19 +195,26 @@ public class MainActivity extends Activity {
     @Override
     protected void onDestroy() {
     	unregisterReceiver(receiver);
+    	dbHelper.close();
     	super.onDestroy();
     }
     
     public void refreshList(){
 		String urlStr = "http://www.51voa.com/VOA_Special_English/";
+		List<Object> objList = parseHtml.getDownloadDataList(urlStr);
+		if (objList!=null) {
+			dbHelper.insertDataList(objList);
+			Toast.makeText(mContext, "refresh completed!", Toast.LENGTH_SHORT).show();
+			//update the listView
+			dataList.clear();
+			dataList.addAll(objList);
+			adapter.notifyDataSetChanged();
+		} else {
+			Toast.makeText(mContext, "refresh error!", Toast.LENGTH_SHORT).show();
+		}
 		
-		DBHelper dbHelper = new DBHelper(mContext);
-		dbHelper.insertDataList(parseHtml.getDownloadDataList(urlStr));
-		Toast.makeText(mContext, "refresh completed!", Toast.LENGTH_SHORT).show();
-		//update the listView
-		dataList.clear();
-		dataList.addAll(dbHelper.getDataList());
-		adapter.notifyDataSetChanged();
+		
+		
     }
     
     /**
@@ -190,5 +236,7 @@ public class MainActivity extends Activity {
         	adapter.notifyDataSetChanged();
         }
     }
+    
+    
     
 }

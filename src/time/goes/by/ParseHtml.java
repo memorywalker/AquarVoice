@@ -37,10 +37,13 @@ public class ParseHtml {
 			e.printStackTrace();
 		}
     	Element content = doc.getElementById("blist");
-    	Elements liList = content.getElementsByTag("li");
-    	for (Element link : liList) {
-    		dataList.add(getVoiceListItemData(link));
-    	}
+    	if (content!=null) {
+    		Elements liList = content.getElementsByTag("li");
+        	for (Element link : liList) {
+        		dataList.add(getVoiceListItemData(link));
+        	}
+		}
+    	
     	return dataList;
     }
     
@@ -75,7 +78,7 @@ public class ParseHtml {
      * @return
      */
     public static String getVoiceMP3Url(String contentURL){
-    	String mp3URL = "";
+    	String mp3URL = null;
     	Document doc = null;
 		try {
 			doc = Jsoup.connect(contentURL).get();
@@ -84,8 +87,11 @@ public class ParseHtml {
 			e.printStackTrace();
 		}
     	Element menubar = doc.getElementById("menubar");
-    	Elements aList = menubar.getElementsByTag("a");
-    	mp3URL = aList.get(0).attr("href");
+    	if (menubar!=null) {
+    		Elements aList = menubar.getElementsByTag("a");
+        	mp3URL = aList.get(0).attr("href");
+		}
+    	
     	return mp3URL;
     }
    

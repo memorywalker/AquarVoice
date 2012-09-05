@@ -38,6 +38,8 @@ public class DBHelper extends SQLiteOpenHelper{
 	public static final String KEY_CONTENT_FILE_COLUMN = "CONTENT_FILE";
 	public static final String KEY_LRC_FILE_COLUMN = "LRC_FILE";
 	public static final String KEY_IS_DOWNLOAD_COLUMN = "IS_DOWNLOAD";
+	public static final String KEY_MP3_URL_COLUMN = "MP3_URL";
+	public static final String KEY_RATING_COLUMN = "RATING";
 	
 	private static final String DATABASE_NAME = "voice.db";
 	private static final String DATABASE_TABLE = "voice_list";
@@ -55,6 +57,8 @@ public class DBHelper extends SQLiteOpenHelper{
 	  KEY_VOICE_FILE_COLUMN + " text, " +
 	  KEY_CONTENT_FILE_COLUMN + " text, " +
 	  KEY_LRC_FILE_COLUMN + " text, " +
+	  KEY_MP3_URL_COLUMN + " text, " +
+	  KEY_RATING_COLUMN + " float, " +
 	  KEY_IS_DOWNLOAD_COLUMN + " text);";
 	
 	public DBHelper(Context context){
@@ -97,6 +101,8 @@ public class DBHelper extends SQLiteOpenHelper{
 		newValues.put(KEY_CONTENT_FILE_COLUMN, data.contentFile);
 		newValues.put(KEY_LRC_FILE_COLUMN, data.lrcFile);
 		newValues.put(KEY_IS_DOWNLOAD_COLUMN, data.isDownload);
+		newValues.put(KEY_MP3_URL_COLUMN, data.mp3URL);
+		newValues.put(KEY_RATING_COLUMN, data.rating);
 		
 		db.insert(DATABASE_TABLE, null, newValues);
 	}
@@ -106,7 +112,7 @@ public class DBHelper extends SQLiteOpenHelper{
 			KEY_ID,KEY_VOICE_TITLE_COLUMN,KEY_VOICE_TYPE_COLUMN,
 			KEY_CONTENT_URL_COLUMN,KEY_LRC_URL_COLUMN,KEY_TRANSLATE_URL_COLUMN,
 			KEY_VOICE_FILE_COLUMN,KEY_CONTENT_FILE_COLUMN,KEY_LRC_FILE_COLUMN,
-			KEY_IS_DOWNLOAD_COLUMN
+			KEY_IS_DOWNLOAD_COLUMN,KEY_MP3_URL_COLUMN,KEY_RATING_COLUMN
 		};
 		return db.query(DATABASE_TABLE, columns, null, null, null, null, null);
 	}
@@ -126,6 +132,8 @@ public class DBHelper extends SQLiteOpenHelper{
 		int KEY_CONTENT_FILE_INDEX = cursor.getColumnIndexOrThrow(KEY_CONTENT_FILE_COLUMN);
 		int KEY_LRC_FILE_INDEX = cursor.getColumnIndexOrThrow(KEY_LRC_FILE_COLUMN);
 		int KEY_IS_DOWNLOAD_INDEX = cursor.getColumnIndexOrThrow(KEY_IS_DOWNLOAD_COLUMN);
+		int KEY_MP3_URL_INDEX = cursor.getColumnIndexOrThrow(KEY_MP3_URL_COLUMN);
+		int KEY_RATING_INDEX = cursor.getColumnIndexOrThrow(KEY_RATING_COLUMN);
 		
 		while (cursor.moveToNext()) {
 			VoiceListItemData data = new VoiceListItemData();
@@ -139,6 +147,8 @@ public class DBHelper extends SQLiteOpenHelper{
 			data.contentFile = cursor.getString(KEY_CONTENT_FILE_INDEX);
 			data.lrcFile = cursor.getString(KEY_LRC_FILE_INDEX);
 			data.isDownload = cursor.getInt(KEY_IS_DOWNLOAD_INDEX);
+			data.mp3URL = cursor.getString(KEY_MP3_URL_INDEX);
+			data.rating = cursor.getFloat(KEY_RATING_INDEX);
 			
 			dataList.add(data);
 		}
@@ -157,12 +167,33 @@ public class DBHelper extends SQLiteOpenHelper{
 		return count;
 	}
 	
-	public void updateDownloadStatus(String id, int isDownload){
+	public void updateDownloadStatus(String id, int isDownload, String filePath){
 		ContentValues newValues = new ContentValues();
 		newValues.put(KEY_IS_DOWNLOAD_COLUMN, isDownload);
+		newValues.put(KEY_VOICE_FILE_COLUMN, filePath);
 		String where = KEY_ID +"="+id;
 		db = getWritableDatabase();
 		db.update(DATABASE_TABLE, newValues, where, null);
+	}
+	
+	public void updateMP3URL(String id, String mp3URL){
+		ContentValues newValues = new ContentValues();
+		newValues.put(KEY_MP3_URL_COLUMN, mp3URL);
+		String where = KEY_ID +"="+id;
+		db = getWritableDatabase();
+		db.update(DATABASE_TABLE, newValues, where, null);
+	}
+	
+	public void updateRating(String id, float rating){
+		ContentValues newValues = new ContentValues();
+		newValues.put(KEY_RATING_COLUMN, rating);
+		String where = KEY_ID +"="+id;
+		db = getWritableDatabase();
+		db.update(DATABASE_TABLE, newValues, where, null);
+	}
+	
+	public void close(){
+		db.close();
 	}
 	
 }
