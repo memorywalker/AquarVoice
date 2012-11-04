@@ -3,6 +3,7 @@
  */
 package time.goes.by;
 
+import java.io.File;
 import java.io.IOException;
 
 import com.umeng.analytics.MobclickAgent;
@@ -56,8 +57,8 @@ public class PlayActivity extends Activity {
 		bpause = (Button) findViewById(R.id.pause);
 		bstop = (Button) findViewById(R.id.stop);
 		playSeekBar = (SeekBar) findViewById(R.id.playSeekBar);
-		
-		if (voiceFile==null) {
+		File file = new File(voiceFile);
+		if (voiceFile==null||(!file.exists())) {
 			bplay.setClickable(false);
 		}
 		bplay.setOnClickListener(new OnClickListener() {
@@ -136,14 +137,16 @@ public class PlayActivity extends Activity {
 		
 		@Override
 		public void run() {
-			// TODO Auto-generated method stub
-			playSeekBar.setProgress(mp.getCurrentPosition());
-			handler.postDelayed(updateThread, 100);
+			if (mp.isPlaying()) {
+				playSeekBar.setProgress(mp.getCurrentPosition());
+				handler.postDelayed(updateThread, 100);
+			}
 		}
 	};
 	
 	@Override
     protected void onDestroy() {
+		handler.removeCallbacks(updateThread);
        if(mp != null)
            mp.release();
        super.onDestroy();
@@ -162,4 +165,6 @@ public class PlayActivity extends Activity {
 		super.onPause();
 		MobclickAgent.onPause(mContext);
 	}
+	
+	
 }

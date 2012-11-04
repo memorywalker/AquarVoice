@@ -195,29 +195,30 @@ public class MainActivity extends Activity {
 				int position, long id) {
 			MobclickAgent.onEvent(mContext, "ItemLongClick");
 			downloadingItemData = (VoiceListItemData) adapter.getItem(position);
-			if (1==downloadingItemData.isDownload) {
-				Toast.makeText(mContext, "This Item has downloaded.", Toast.LENGTH_SHORT).show();
-			} else{
-				String mp3URL = null;
-				//mp3 url has fetched or not.
-				if (downloadingItemData.mp3URL==null) {
-					mp3URL = ParseHtml.getInstance().getVoiceMP3Url(downloadingItemData.contentURL);
-				} else {
-					mp3URL = downloadingItemData.mp3URL;
-				}
-				
-				if (mp3URL!=null) {
-					dbHelper.updateStringField(downloadingItemData.id, DBHelper.KEY_MP3_URL_COLUMN, mp3URL);
-					downloadingItemData.mp3URL = mp3URL;					
-					filePath = "file://"+FileHelper.APP_PATH_VOICE + downloadingItemData.title.trim()+".mp3";
-					myDownloadReference = download(mp3URL, filePath);
-					
-					String contentFile = downloadingItemData.saveContentFile();
-					dbHelper.updateStringField(downloadingItemData.id, DBHelper.KEY_CONTENT_FILE_COLUMN, contentFile);
-				} else {
-					Toast.makeText(mContext, "MP3 URL error!!!", Toast.LENGTH_SHORT).show();
-				}
-				
+			
+			String mp3URL = null;
+			// mp3 url has fetched or not.
+			if (downloadingItemData.mp3URL == null) {
+				mp3URL = ParseHtml.getInstance().getVoiceMP3Url(
+						downloadingItemData.contentURL);
+			} else {
+				mp3URL = downloadingItemData.mp3URL;
+			}
+
+			if (mp3URL != null) {
+				dbHelper.updateStringField(downloadingItemData.id,
+						DBHelper.KEY_MP3_URL_COLUMN, mp3URL);
+				downloadingItemData.mp3URL = mp3URL;
+				filePath = "file://" + FileHelper.APP_PATH_VOICE
+						+ downloadingItemData.title.trim() + ".mp3";
+				myDownloadReference = download(mp3URL, filePath);
+
+				String contentFile = downloadingItemData.saveContentFile();
+				dbHelper.updateStringField(downloadingItemData.id,
+						DBHelper.KEY_CONTENT_FILE_COLUMN, contentFile);
+			} else {
+				Toast.makeText(mContext, "MP3 URL error!!!", Toast.LENGTH_SHORT)
+						.show();
 			}
 			return true; //avoid OnItemClick
 		}
