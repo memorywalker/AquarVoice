@@ -20,6 +20,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.WebView.FindListener;
 import android.widget.BaseAdapter;
+import android.widget.ImageView;
 import android.widget.RatingBar;
 import android.widget.RatingBar.OnRatingBarChangeListener;
 import android.widget.TextView;
@@ -79,19 +80,7 @@ public class VoiceListAdapter extends BaseAdapter {
 			holder = new ViewHolder();
 			holder.titleView = (TextView) convertView.findViewById(R.id.title);
 			holder.descriptView = (TextView) convertView.findViewById(R.id.description);
-			holder.rateBar = (RatingBar) convertView.findViewById(R.id.ratingBar);
-			
-			holder.rateBar.setOnRatingBarChangeListener(new OnRatingBarChangeListener() {
-				
-				@Override
-				public void onRatingChanged(RatingBar ratingBar, float rating,
-						boolean fromUser) {
-					// TODO Auto-generated method stub
-					DBHelper dbHelper = new DBHelper(mContext);
-					dbHelper.updateRating(data.id, rating);
-					dbHelper.close();
-				}
-			});
+			holder.statusView = (ImageView) convertView.findViewById(R.id.status);
 			convertView.setTag(holder);
 		} else {
 			holder = (ViewHolder) convertView.getTag();
@@ -100,9 +89,9 @@ public class VoiceListAdapter extends BaseAdapter {
 		holder.titleView.setText(data.title);
 		holder.descriptView.setText(data.type);
 		if (data.isDownload==VoiceDataBaseDefine.DOWNLOAD_STATUS_YES) {
-			holder.rateBar.setVisibility(View.VISIBLE);
+			holder.statusView.setVisibility(View.VISIBLE);
 		} else {
-			holder.rateBar.setVisibility(View.GONE);
+			holder.statusView.setVisibility(View.GONE);
 		}
 		return convertView;
 	}
@@ -111,7 +100,7 @@ public class VoiceListAdapter extends BaseAdapter {
 	static class ViewHolder {
 		TextView titleView;
 		TextView descriptView;
-		RatingBar rateBar;
+		ImageView statusView;
 	}
 
 }

@@ -62,8 +62,7 @@ public class MainActivity extends Activity {
 		listView.setOnItemLongClickListener(itemLongClickListener);
 		//click into play UI
 		listView.setOnItemClickListener(listOnItemClickListener);
-		// post a task to read data list from database.
-		new ReadDBTask().execute("");
+		
     }
     
     private BroadcastReceiver receiver = new BroadcastReceiver() {
@@ -160,6 +159,8 @@ public class MainActivity extends Activity {
     @Override
     protected void onResume() {
     	super.onResume();
+    	// post a task to read data list from database.
+    	new ReadDBTask().execute("");
     	MobclickAgent.onResume(mContext);
     }
     
@@ -179,8 +180,7 @@ public class MainActivity extends Activity {
 			currentItemData = (VoiceListItemData) adapter.getItem(position);
 			if (currentItemData.mp3URL!=null) {
 				Intent intent = new Intent(mContext, PlayActivity.class);
-				intent.putExtra(VoiceDataBaseDefine.MAP_KEY_MP3_FILE, currentItemData.voiceFile);
-				intent.putExtra(VoiceDataBaseDefine.MAP_KEY_CONTENT, currentItemData.contentFile);
+				intent.putExtra(VoiceDataBaseDefine.KEY_VOICE_DATA, currentItemData);
 				startActivity(intent);
 			} else {
 				Toast.makeText(mContext, "MP3 not downloaded yet!!!", Toast.LENGTH_SHORT).show();

@@ -7,7 +7,7 @@
     <ScrollView
         android:id="@+id/scroller"
         android:layout_width="match_parent"
-        android:layout_height="400dp"
+        android:layout_height="360dp"
         android:background="#FF456826" >
 
         <WebView
@@ -20,11 +20,12 @@
     <SeekBar
         android:id="@+id/playSeekBar"
         android:layout_width="fill_parent"
-        android:layout_height="40dp" />
+        android:layout_height="20dp"
+         />
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="40dp"
         android:orientation="horizontal" >
 
         <Button
@@ -51,5 +52,12 @@
             android:text="stop" >
         </Button>
     </LinearLayout>
-
+	<RatingBar
+        android:id="@+id/ratingBar"
+        android:layout_width="fill_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:background="#ffff0000"
+        android:stepSize="0.5"
+        android:numStars="5"  />
 </LinearLayout>

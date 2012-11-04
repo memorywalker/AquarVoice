@@ -8,7 +8,9 @@ import java.io.IOException;
 
 import com.umeng.analytics.MobclickAgent;
 
+import time.goes.by.data.DBHelper;
 import time.goes.by.data.VoiceDataBaseDefine;
+import time.goes.by.data.VoiceListItemData;
 
 import android.app.Activity;
 import android.content.Context;
@@ -21,7 +23,9 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.webkit.WebView;
 import android.widget.Button;
+import android.widget.RatingBar;
 import android.widget.SeekBar;
+import android.widget.RatingBar.OnRatingBarChangeListener;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
 
@@ -34,8 +38,9 @@ public class PlayActivity extends Activity {
 	private Button bplay, bpause, bstop;
 	private SeekBar playSeekBar;
 	private MediaPlayer mp = new MediaPlayer();
-	private String voiceFile = "";
+	private VoiceListItemData voiceData = null;
 	private Context mContext;
+	String voiceFile = "";
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -45,18 +50,35 @@ public class PlayActivity extends Activity {
 		mContext = this;
 		
 		Intent intent = getIntent();
-		voiceFile = intent.getStringExtra(VoiceDataBaseDefine.MAP_KEY_MP3_FILE);
-		String contentFile = intent.getStringExtra(VoiceDataBaseDefine.MAP_KEY_CONTENT);
+		voiceData = intent.getParcelableExtra(VoiceDataBaseDefine.KEY_VOICE_DATA);
+		String contentFile = voiceData.contentFile;
 		
 		// set the content of webView
 		WebView contentView = (WebView) findViewById(R.id.contentText);
 		String fileURL = "file://"+contentFile;
 		contentView.loadUrl(fileURL);
+		RatingBar rateBar = (RatingBar) findViewById(R.id.ratingBar);
+		if (voiceData.rating!=null) {
+			rateBar.setRating(voiceData.rating);
+		}
+		rateBar.setOnRatingBarChangeListener(new OnRatingBarChangeListener() {
+			
+			@Override
+			public void onRatingChanged(RatingBar ratingBar, float rating,
+					boolean fromUser) {
+				// TODO Auto-generated method stub
+				DBHelper dbHelper = new DBHelper(mContext);
+				dbHelper.updateRating(voiceData.id, rating);
+				dbHelper.close();
+			}
+		});
 		
 		bplay = (Button) findViewById(R.id.play);
 		bpause = (Button) findViewById(R.id.pause);
 		bstop = (Button) findViewById(R.id.stop);
 		playSeekBar = (SeekBar) findViewById(R.id.playSeekBar);
+		
+		voiceFile = voiceData.voiceFile;
 		File file = new File(voiceFile);
 		if (voiceFile==null||(!file.exists())) {
 			bplay.setClickable(false);
