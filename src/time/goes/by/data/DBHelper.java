@@ -119,7 +119,8 @@ public class DBHelper extends SQLiteOpenHelper{
 			KEY_VOICE_FILE_COLUMN,KEY_CONTENT_FILE_COLUMN,KEY_LRC_FILE_COLUMN,
 			KEY_IS_DOWNLOAD_COLUMN,KEY_MP3_URL_COLUMN,KEY_RATING_COLUMN
 		};
-		return db.query(DATABASE_TABLE, columns, null, null, null, null, null);
+		String orderBy = KEY_ID +" desc";
+		return db.query(DATABASE_TABLE, columns, null, null, null, null, orderBy);
 	}
 	
 	/**
@@ -227,15 +228,6 @@ public class DBHelper extends SQLiteOpenHelper{
 		newValues.put(KEY_IS_DOWNLOAD_COLUMN, isDownload);
 		newValues.put(KEY_VOICE_FILE_COLUMN, filePath);
 		String where = KEY_ID +"="+id;
-		db = getWritableDatabase();
-		db.update(DATABASE_TABLE, newValues, where, null);
-	}
-	
-	public void updateMP3URL(String id, String mp3URL){
-		ContentValues newValues = new ContentValues();
-		newValues.put(KEY_MP3_URL_COLUMN, mp3URL);
-		String where = KEY_ID +"="+id;
-		db = getWritableDatabase();
 		db.update(DATABASE_TABLE, newValues, where, null);
 	}
 	
@@ -243,7 +235,13 @@ public class DBHelper extends SQLiteOpenHelper{
 		ContentValues newValues = new ContentValues();
 		newValues.put(KEY_RATING_COLUMN, rating);
 		String where = KEY_ID +"="+id;
-		db = getWritableDatabase();
+		db.update(DATABASE_TABLE, newValues, where, null);
+	}
+	
+	public void updateStringField(String id, String field, String value) {
+		ContentValues newValues = new ContentValues();
+		newValues.put(field, value);
+		String where = KEY_ID +"="+id;
 		db.update(DATABASE_TABLE, newValues, where, null);
 	}
 	

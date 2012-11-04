@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import com.umeng.analytics.MobclickAgent;
 import time.goes.by.data.DBHelper;
+import time.goes.by.data.FileHelper;
 import time.goes.by.data.VoiceDataBaseDefine;
 import time.goes.by.data.VoiceListItemData;
 
@@ -37,6 +38,7 @@ public class MainActivity extends Activity {
 	private ListView listView;
 	private VoiceListAdapter adapter;
 	VoiceListItemData currentItemData;
+	VoiceListItemData downloadingItemData;
 	DBHelper dbHelper;
 	String fileName = "";
 	String filePath = "";
@@ -72,28 +74,22 @@ public class MainActivity extends Activity {
 			// when download is completed
 			if (reference == myDownloadReference) {
 				Toast.makeText(mContext, "Download ok", Toast.LENGTH_SHORT).show();
-				dbHelper.updateDownloadStatus(currentItemData.id, VoiceDataBaseDefine.DOWNLOAD_STATUS_YES, filePath);
-				currentItemData.isDownload = 1;
-				currentItemData.voiceFile = filePath;
+				dbHelper.updateDownloadStatus(downloadingItemData.id, VoiceDataBaseDefine.DOWNLOAD_STATUS_YES, filePath);
+				new ReadDBTask().execute("");
 			}
 		}
 	};
     
-    public long download(String urlStr, String path, String filename){
+    public long download(String urlStr, String fileName){
     	DownloadManager downloadManager = (DownloadManager)
     			getSystemService(Context.DOWNLOAD_SERVICE);
 		// urlStr="http://down.51voa.com/201208/se-am-neil-armstrong-great-animal-orchestra-and-kris-allen-31aug12.mp3";
-    	File downloadDir = Environment.getExternalStoragePublicDirectory(path);
-    	if (!downloadDir.exists()) {
-    		downloadDir.mkdirs();
-		}
-        //get the entire file path include the name.
-    	filePath = downloadDir.toString()+"/"+filename;
     	Uri uri = Uri.parse(urlStr);
     	DownloadManager.Request req = new Request(uri);
-    	
-    	req.setDestinationInExternalPublicDir(path, filename);
-    	req.setTitle(filename)
+    	Uri destUri = Uri.parse(fileName);
+    	req.setDestinationUri(destUri);
+    	//req.setDestinationInExternalPublicDir(path, filename);
+    	req.setTitle(fileName)
     	.setShowRunningNotification(true);
     	//req.allowScanningByMediaScanner();
     	return downloadManager.enqueue(req);
@@ -138,9 +134,6 @@ public class MainActivity extends Activity {
 		} else {
 			Toast.makeText(mContext, "refresh error!", Toast.LENGTH_SHORT).show();
 		}
-		
-		
-		
     }
     
     /**
@@ -158,6 +151,7 @@ public class MainActivity extends Activity {
         /** The system calls this to perform work in the UI thread and delivers
           * the result from doInBackground() */
         protected void onPostExecute(List<Object> result) {
+        	dataList.clear();
         	dataList.addAll(result);
         	adapter.notifyDataSetChanged();
         }
@@ -186,6 +180,7 @@ public class MainActivity extends Activity {
 			if (currentItemData.mp3URL!=null) {
 				Intent intent = new Intent(mContext, PlayActivity.class);
 				intent.putExtra(VoiceDataBaseDefine.MAP_KEY_MP3_FILE, currentItemData.voiceFile);
+				intent.putExtra(VoiceDataBaseDefine.MAP_KEY_CONTENT, currentItemData.contentFile);
 				startActivity(intent);
 			} else {
 				Toast.makeText(mContext, "MP3 not downloaded yet!!!", Toast.LENGTH_SHORT).show();
@@ -199,24 +194,26 @@ public class MainActivity extends Activity {
 		public boolean onItemLongClick(AdapterView<?> parent, View view,
 				int position, long id) {
 			MobclickAgent.onEvent(mContext, "ItemLongClick");
-			currentItemData = (VoiceListItemData) adapter.getItem(position);
-			if (1==currentItemData.isDownload) {
+			downloadingItemData = (VoiceListItemData) adapter.getItem(position);
+			if (1==downloadingItemData.isDownload) {
 				Toast.makeText(mContext, "This Item has downloaded.", Toast.LENGTH_SHORT).show();
 			} else{
 				String mp3URL = null;
 				//mp3 url has fetched or not.
-				if (currentItemData.mp3URL==null) {
-					mp3URL = ParseHtml.getInstance().getVoiceMP3Url(currentItemData.contentURL);
+				if (downloadingItemData.mp3URL==null) {
+					mp3URL = ParseHtml.getInstance().getVoiceMP3Url(downloadingItemData.contentURL);
 				} else {
-					mp3URL = currentItemData.mp3URL;
+					mp3URL = downloadingItemData.mp3URL;
 				}
 				
 				if (mp3URL!=null) {
-					dbHelper.updateMP3URL(currentItemData.id, mp3URL);
-					currentItemData.mp3URL = mp3URL;
-					String path = "AquarVoice";
-					fileName = currentItemData.title.trim()+".mp3";
-					myDownloadReference = download(mp3URL, path, fileName);
+					dbHelper.updateStringField(downloadingItemData.id, DBHelper.KEY_MP3_URL_COLUMN, mp3URL);
+					downloadingItemData.mp3URL = mp3URL;					
+					filePath = "file://"+FileHelper.APP_PATH_VOICE + downloadingItemData.title.trim()+".mp3";
+					myDownloadReference = download(mp3URL, filePath);
+					
+					String contentFile = downloadingItemData.saveContentFile();
+					dbHelper.updateStringField(downloadingItemData.id, DBHelper.KEY_CONTENT_FILE_COLUMN, contentFile);
 				} else {
 					Toast.makeText(mContext, "MP3 URL error!!!", Toast.LENGTH_SHORT).show();
 				}

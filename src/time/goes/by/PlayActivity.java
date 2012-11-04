@@ -18,6 +18,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.webkit.WebView;
 import android.widget.Button;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
@@ -30,10 +31,9 @@ import android.widget.TextView;
 public class PlayActivity extends Activity {
 
 	private Button bplay, bpause, bstop;
-	private TextView playFileView;
 	private SeekBar playSeekBar;
 	private MediaPlayer mp = new MediaPlayer();
-	private String playFile = "";
+	private String voiceFile = "";
 	private Context mContext;
 
 	@Override
@@ -44,17 +44,20 @@ public class PlayActivity extends Activity {
 		mContext = this;
 		
 		Intent intent = getIntent();
-		playFile = intent.getStringExtra(VoiceDataBaseDefine.MAP_KEY_MP3_FILE);
+		voiceFile = intent.getStringExtra(VoiceDataBaseDefine.MAP_KEY_MP3_FILE);
+		String contentFile = intent.getStringExtra(VoiceDataBaseDefine.MAP_KEY_CONTENT);
 		
-		playFileView = (TextView) findViewById(R.id.fileName);
+		// set the content of webView
+		WebView contentView = (WebView) findViewById(R.id.contentText);
+		String fileURL = "file://"+contentFile;
+		contentView.loadUrl(fileURL);
+		
 		bplay = (Button) findViewById(R.id.play);
 		bpause = (Button) findViewById(R.id.pause);
 		bstop = (Button) findViewById(R.id.stop);
 		playSeekBar = (SeekBar) findViewById(R.id.playSeekBar);
-
-		playFileView.setText(playFile);
 		
-		if (playFile==null) {
+		if (voiceFile==null) {
 			bplay.setClickable(false);
 		}
 		bplay.setOnClickListener(new OnClickListener() {
@@ -62,7 +65,7 @@ public class PlayActivity extends Activity {
 			public void onClick(View v) {
 				try {
 					mp.reset();
-					mp.setDataSource(playFile);
+					mp.setDataSource(voiceFile);
 					mp.prepare();
 					playSeekBar.setMax(mp.getDuration());
 					mp.start();

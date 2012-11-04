@@ -9,9 +9,19 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.List;
 import java.util.Map;
+
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.ResponseHandler;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.BasicResponseHandler;
+import org.apache.http.impl.client.DefaultHttpClient;
+
+import time.goes.by.data.FileHelper;
 
 
 import android.os.Environment;
@@ -27,7 +37,7 @@ public class DownloadHelper {
 	public static int downloadFile(String urlStr, String filePath, String fileName) {
 		InputStream inputStream = getInputStreamFromUrl(urlStr);
 		if (inputStream != null) {
-			return writeToSdCard(inputStream, filePath, fileName);
+			return FileHelper.writeToSdCard(inputStream, filePath, fileName);
 		} else {
 			return 0;
 		}
@@ -62,72 +72,14 @@ public class DownloadHelper {
 		return inputStream;
 	}
 
-	/**
-	 * @param inStream
-	 * @param filePath
-	 * @param fileName
-	 * @return 0 存储文件失败，1存储文件成功，-1文件已经存在
-	 */
-	public static int writeToSdCard(InputStream inStream, String filePath,
-			String fileName) {
-		int retVal = 0;
-		// file name
-		// String filePath = "/AquarVoice/";
-		// String fileName = "test.txt";
-		// check for sdcard
-		boolean sdCardExist = Environment.getExternalStorageState().equals(
-				android.os.Environment.MEDIA_MOUNTED);
-		if (sdCardExist) {
-			// sdCardDirectory
-			File sdCardDir = Environment.getExternalStorageDirectory();
-			// file object , true for append to exist file.
-			File saveFile = null;
-			FileOutputStream outStream = null;
-			// create file
-			try {
-				File path = new File(sdCardDir.getAbsolutePath() + filePath);
-				if (!path.exists()) {// must check the path first
-					path.mkdirs();
-				}
-				saveFile = new File(path, fileName);
-				if (saveFile.exists()) {
-					return -1; // 文件已存在
-				} else {
-					outStream = new FileOutputStream(saveFile);
-				}
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-
-			// write InputStream to file.
-			if (outStream != null) {
-				try {
-					byte buffer[] = new byte[128];
-					do {
-						int length = (inStream.read(buffer));
-						if (length != -1) {
-							outStream.write(buffer, 0, length);
-						} else {
-							break;
-						}
-					} while (true);
-					retVal = 1;
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} finally {
-					try {
-						outStream.close();
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-				}
-
-			}
-		}
-		return retVal;
+	public static String getHTMLSting(String url) throws URISyntaxException, ClientProtocolException, IOException{
+		URI uri = new URI(url);
+		DefaultHttpClient httpClient = new DefaultHttpClient();
+		HttpGet httpGet = new HttpGet(uri);
+		BasicResponseHandler responseHandler = new BasicResponseHandler();
+		String content = httpClient.execute(httpGet, responseHandler);
+		content = new String(content.getBytes("ISO-8859-1"),"UTF-8");
+		return content;
 	}
 	
 	

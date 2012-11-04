@@ -87,7 +87,7 @@ public class ParseHtml {
     public String getVoiceMP3Url(String contentURL){
     	String mp3URL = null;
     	Document doc = null;
-		try {
+    	try {
 			doc = Jsoup.connect(contentURL).get();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -100,6 +100,28 @@ public class ParseHtml {
 		}
     	
     	return mp3URL;
+    }
+    
+    public String getVoiceDoc(String url) {
+    	String html = "<html><head><title>Title</title></head>"
+    			  + "<body><p id='title'>Parsed HTML into a doc.</p>" +
+    			  "</body></html>";
+    	Document mydoc = Jsoup.parse(html);
+    	Document doc = null;
+    	try {
+			doc = Jsoup.connect(url).get();
+			String title = doc.title();
+			Element body = doc.select("#content").first();
+			body.select("#menubar").first().remove();
+			body.select("#playbar").first().remove();
+			mydoc.title(title);
+			mydoc.select("#title").first().text(title);
+			mydoc.body().appendChild(body);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    	return mydoc.html();
     }
    
 }

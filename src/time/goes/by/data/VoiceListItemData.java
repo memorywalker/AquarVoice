@@ -3,6 +3,9 @@
  */
 package time.goes.by.data;
 
+import time.goes.by.DownloadHelper;
+import time.goes.by.ParseHtml;
+
 /**
  * @author Edison
  * @Date  Sep 2, 2012
@@ -24,6 +27,13 @@ public class VoiceListItemData {
 	
 	public VoiceListItemData() {
 		// TODO Auto-generated constructor stub
+	}
+	
+	public String saveContentFile() {
+		String content = ParseHtml.getInstance().getVoiceDoc(contentURL);
+		String fileName = FileHelper.APP_PATH_DOC + title;
+		FileHelper.writeToFile(content, fileName);
+		return fileName;
 	}
 	
 }
