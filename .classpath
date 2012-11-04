@@ -9,5 +9,8 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="con" path="com.android.ide.eclipse.adt.LIBRARIES"/>
+	<classpathentry kind="lib" path="E:/code/android/AquarVoice/libs/android_api.jar"/>
+	<classpathentry kind="lib" path="E:/code/juno32/AquarVoice/libs/umeng_sdk.jar"/>
+	<classpathentry kind="lib" path="E:/code/juno32/AquarVoice/libs/cobub.jar"/>
 	<classpathentry kind="output" path="bin/classes"/>
 </classpath>

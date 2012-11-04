@@ -5,9 +5,12 @@ package time.goes.by;
 
 import java.io.IOException;
 
+import com.umeng.analytics.MobclickAgent;
+
 import time.goes.by.data.VoiceDataBaseDefine;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.media.MediaPlayer;
 import android.media.MediaPlayer.OnCompletionListener;
@@ -31,11 +34,14 @@ public class PlayActivity extends Activity {
 	private SeekBar playSeekBar;
 	private MediaPlayer mp = new MediaPlayer();
 	private String playFile = "";
+	private Context mContext;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.play_activity);
+		MobclickAgent.onError(this);
+		mContext = this;
 		
 		Intent intent = getIntent();
 		playFile = intent.getStringExtra(VoiceDataBaseDefine.MAP_KEY_MP3_FILE);
@@ -139,4 +145,18 @@ public class PlayActivity extends Activity {
            mp.release();
        super.onDestroy();
     }
+	
+	@Override
+	protected void onResume() {
+		// TODO Auto-generated method stub
+		super.onResume();
+		MobclickAgent.onResume(mContext);
+	}
+	
+	@Override
+	protected void onPause() {
+		// TODO Auto-generated method stub
+		super.onPause();
+		MobclickAgent.onPause(mContext);
+	}
 }

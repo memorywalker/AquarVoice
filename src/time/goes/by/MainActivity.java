@@ -3,10 +3,8 @@ package time.goes.by;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-
+import com.umeng.analytics.MobclickAgent;
 import time.goes.by.data.DBHelper;
 import time.goes.by.data.VoiceDataBaseDefine;
 import time.goes.by.data.VoiceListItemData;
@@ -19,18 +17,15 @@ import android.app.Activity;
 import android.app.DownloadManager;
 import android.app.DownloadManager.Request;
 import android.content.BroadcastReceiver;
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AdapterView.OnItemLongClickListener;
-import android.widget.Button;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -38,8 +33,6 @@ public class MainActivity extends Activity {
 	
 	private long myDownloadReference = 0;
 	private Context mContext;
-	private BroadcastReceiver receiver;
-	private ParseHtml parseHtml;
 	private List<Object> dataList;
 	private ListView listView;
 	private VoiceListAdapter adapter;
@@ -51,106 +44,40 @@ public class MainActivity extends Activity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        MobclickAgent.onError(this);
         mContext = this;
         setContentView(R.layout.activity_main);
         dataList = new ArrayList<Object>();
-        Button writeBtn = (Button) findViewById(R.id.writeBtn);
         dbHelper = new DBHelper(mContext);
-        writeBtn.setOnClickListener(new OnClickListener() {
-			
-			public void onClick(View v) {
-				
-				
-				
-				/*new Thread(new Runnable() {
-					
-					public void run() {
-						// TODO Auto-generated method stub
-						String urlStr="http://down.51voa.com/201208/se-am-neil-armstrong-great-animal-orchestra-and-kris-allen-31aug12.mp3";
-						String filePath = "/AquarVoice/";
-						String fileName = "voa.mp3";
-						//DownloadHelper.downloadFile(urlStr, filePath, fileName);
-						myDownloadReference = download();
-					}
-				});*/
-			}
-		});
         
         IntentFilter filter = new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE);
-        receiver = new BroadcastReceiver() {
-			
-			@Override
-			public void onReceive(Context context, Intent intent) {
-				long reference = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1);
-				// when download is completed
-				if (reference == myDownloadReference) {
-					Toast.makeText(mContext, "Download ok", Toast.LENGTH_SHORT).show();
-					dbHelper.updateDownloadStatus(currentItemData.id, 1, filePath);
-					currentItemData.isDownload = 1;
-					currentItemData.voiceFile = filePath;
-				}
-			}
-		};
-		
 		registerReceiver(receiver, filter);
-		
-		parseHtml = new ParseHtml();
 		
 		listView = (ListView) findViewById(R.id.listview);
 		adapter = new VoiceListAdapter(mContext, dataList, R.layout.voice_list_item);
 		listView.setAdapter(adapter);
-		
-		listView.setOnItemLongClickListener(new OnItemLongClickListener() {
-
-			public boolean onItemLongClick(AdapterView<?> parent, View view,
-					int position, long id) {
-				currentItemData = (VoiceListItemData) adapter.getItem(position);
-				if (1==currentItemData.isDownload) {
-					Toast.makeText(mContext, "This Item has downloaded.", Toast.LENGTH_SHORT).show();
-				} else{
-					String mp3URL = null;
-					//mp3 url has fetched or not.
-					if (currentItemData.mp3URL==null) {
-						mp3URL = ParseHtml.getVoiceMP3Url(currentItemData.contentURL);
-					} else {
-						mp3URL = currentItemData.mp3URL;
-					}
-					
-					if (mp3URL!=null) {
-						dbHelper.updateMP3URL(currentItemData.id, mp3URL);
-						currentItemData.mp3URL = mp3URL;
-						String path = "AquarVoice";
-						fileName = currentItemData.title.trim()+".mp3";
-						myDownloadReference = download(mp3URL, path, fileName);
-					} else {
-						Toast.makeText(mContext, "MP3 URL error!!!", Toast.LENGTH_SHORT).show();
-					}
-					
-				}
-				return true; //avoid OnItemClick
-			}
-		});
-		
-		listView.setOnItemClickListener(new OnItemClickListener() {
-
-			@Override
-			public void onItemClick(AdapterView<?> parent, View view,
-					int position, long id) {
-				currentItemData = (VoiceListItemData) adapter.getItem(position);
-				if (currentItemData.mp3URL!=null) {
-					Intent intent = new Intent(mContext, PlayActivity.class);
-					intent.putExtra(VoiceDataBaseDefine.MAP_KEY_MP3_FILE, currentItemData.voiceFile);
-					startActivity(intent);
-				} else {
-					Toast.makeText(mContext, "MP3 not downloaded yet!!!", Toast.LENGTH_SHORT).show();
-				}
-				
-			}
-		});
+		//trigger a dialog to download or delete this record.
+		listView.setOnItemLongClickListener(itemLongClickListener);
+		//click into play UI
+		listView.setOnItemClickListener(listOnItemClickListener);
 		// post a task to read data list from database.
 		new ReadDBTask().execute("");
-		
     }
+    
+    private BroadcastReceiver receiver = new BroadcastReceiver() {
+		
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			long reference = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1);
+			// when download is completed
+			if (reference == myDownloadReference) {
+				Toast.makeText(mContext, "Download ok", Toast.LENGTH_SHORT).show();
+				dbHelper.updateDownloadStatus(currentItemData.id, VoiceDataBaseDefine.DOWNLOAD_STATUS_YES, filePath);
+				currentItemData.isDownload = 1;
+				currentItemData.voiceFile = filePath;
+			}
+		}
+	};
     
     public long download(String urlStr, String path, String filename){
     	DownloadManager downloadManager = (DownloadManager)
@@ -200,15 +127,14 @@ public class MainActivity extends Activity {
     }
     
     public void refreshList(){
+    	// 自定义事件 
 		String urlStr = "http://www.51voa.com/VOA_Special_English/";
-		List<Object> objList = parseHtml.getDownloadDataList(urlStr);
+		List<Object> objList = ParseHtml.getInstance().getDownloadDataList(urlStr);
 		if (objList!=null) {
 			dbHelper.insertDataList(objList);
 			Toast.makeText(mContext, "refresh completed!", Toast.LENGTH_SHORT).show();
-			//update the listView
-			dataList.clear();
-			dataList.addAll(objList);
-			adapter.notifyDataSetChanged();
+			//update the listView from database
+			new ReadDBTask().execute("");
 		} else {
 			Toast.makeText(mContext, "refresh error!", Toast.LENGTH_SHORT).show();
 		}
@@ -237,6 +163,66 @@ public class MainActivity extends Activity {
         }
     }
     
+    @Override
+    protected void onResume() {
+    	super.onResume();
+    	MobclickAgent.onResume(mContext);
+    }
     
+    @Override
+    protected void onPause() {
+    	// TODO Auto-generated method stub
+    	super.onPause();
+    	MobclickAgent.onPause(mContext);
+    }
     
+    AdapterView.OnItemClickListener listOnItemClickListener = new OnItemClickListener() {
+
+		@Override
+		public void onItemClick(AdapterView<?> parent, View view,
+				int position, long id) {
+			MobclickAgent.onEvent(mContext, "ItemClick");
+			currentItemData = (VoiceListItemData) adapter.getItem(position);
+			if (currentItemData.mp3URL!=null) {
+				Intent intent = new Intent(mContext, PlayActivity.class);
+				intent.putExtra(VoiceDataBaseDefine.MAP_KEY_MP3_FILE, currentItemData.voiceFile);
+				startActivity(intent);
+			} else {
+				Toast.makeText(mContext, "MP3 not downloaded yet!!!", Toast.LENGTH_SHORT).show();
+			}
+			
+		}
+	};
+	
+	AdapterView.OnItemLongClickListener itemLongClickListener = new OnItemLongClickListener() {
+
+		public boolean onItemLongClick(AdapterView<?> parent, View view,
+				int position, long id) {
+			MobclickAgent.onEvent(mContext, "ItemLongClick");
+			currentItemData = (VoiceListItemData) adapter.getItem(position);
+			if (1==currentItemData.isDownload) {
+				Toast.makeText(mContext, "This Item has downloaded.", Toast.LENGTH_SHORT).show();
+			} else{
+				String mp3URL = null;
+				//mp3 url has fetched or not.
+				if (currentItemData.mp3URL==null) {
+					mp3URL = ParseHtml.getInstance().getVoiceMP3Url(currentItemData.contentURL);
+				} else {
+					mp3URL = currentItemData.mp3URL;
+				}
+				
+				if (mp3URL!=null) {
+					dbHelper.updateMP3URL(currentItemData.id, mp3URL);
+					currentItemData.mp3URL = mp3URL;
+					String path = "AquarVoice";
+					fileName = currentItemData.title.trim()+".mp3";
+					myDownloadReference = download(mp3URL, path, fileName);
+				} else {
+					Toast.makeText(mContext, "MP3 URL error!!!", Toast.LENGTH_SHORT).show();
+				}
+				
+			}
+			return true; //avoid OnItemClick
+		}
+	};
 }

@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.zip.Inflater;
 
 import time.goes.by.data.DBHelper;
+import time.goes.by.data.VoiceDataBaseDefine;
 import time.goes.by.data.VoiceListItemData;
 
 import android.app.Service;
@@ -98,7 +99,7 @@ public class VoiceListAdapter extends BaseAdapter {
 		
 		holder.titleView.setText(data.title);
 		holder.descriptView.setText(data.type);
-		if (data.isDownload==1) {
+		if (data.isDownload==VoiceDataBaseDefine.DOWNLOAD_STATUS_YES) {
 			holder.rateBar.setVisibility(View.VISIBLE);
 		} else {
 			holder.rateBar.setVisibility(View.GONE);

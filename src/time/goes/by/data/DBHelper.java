@@ -5,6 +5,7 @@ package time.goes.by.data;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -63,7 +64,7 @@ public class DBHelper extends SQLiteOpenHelper{
 	
 	public DBHelper(Context context){
 		super(context, DATABASE_NAME, null, DATABASE_VERSION);
-		db = getReadableDatabase();
+		db = getWritableDatabase();
 	}
 
 	public DBHelper(Context context, String name, CursorFactory factory,
@@ -88,6 +89,10 @@ public class DBHelper extends SQLiteOpenHelper{
 		onCreate(db);
 	}
 	
+	/**
+	 * insert a voice into database.
+	 * @param obj
+	 */
 	public void insert(Object obj) {
 		VoiceListItemData data = (VoiceListItemData)obj;
 		//create a new row
@@ -117,6 +122,10 @@ public class DBHelper extends SQLiteOpenHelper{
 		return db.query(DATABASE_TABLE, columns, null, null, null, null, null);
 	}
 	
+	/**
+	 * get the voice list from database.
+	 * @return
+	 */
 	public List<Object> getDataList() {
 		Cursor cursor = queryAllColumns();
 		List<Object> dataList = new ArrayList<Object>();
@@ -158,15 +167,61 @@ public class DBHelper extends SQLiteOpenHelper{
 	}
 		
 	public int insertDataList(List<Object> dataList){
+		removeDuplicateItem(dataList);
 		int count = 0;
-		for (Object obj : dataList) {
-			VoiceListItemData data = (VoiceListItemData) obj;
+		int size = dataList.size();
+		//reverse the order, so the newest is always added at last.
+		for (int i = size-1; i >= 0; i--) {
+			VoiceListItemData data = (VoiceListItemData) dataList.get(i);
 			insert(data);
 			count++;
 		}
 		return count;
 	}
 	
+	/**
+	 * remove the item already in data base.
+	 * @param dataList
+	 * @return
+	 */
+	private List<Object> removeDuplicateItem(List<Object> dataList) {
+		//get the last record in database, which is the latest in the database.
+		String id = "";
+		String title = "";
+		String[] columns = {KEY_ID, KEY_VOICE_TITLE_COLUMN};
+		Cursor result = db.query(DATABASE_TABLE, columns, null, null, null, null, KEY_ID+ " desc", "1");
+		int KEY_ID_INDEX = result.getColumnIndexOrThrow(KEY_ID);
+		int KEY_VOICE_TITLE_INDEX = result.getColumnIndexOrThrow(KEY_VOICE_TITLE_COLUMN);
+		while (result.moveToNext()) {
+			id = result.getString(KEY_ID_INDEX);
+			title = result.getString(KEY_VOICE_TITLE_INDEX);
+		}
+		
+		//search start from the latest one, if we find the same one is already in the DB,
+		//we remove the rest of the list.
+		boolean flag = false;
+		Iterator<Object> iter = dataList.iterator();
+		while(iter.hasNext()) {
+			VoiceListItemData data = (VoiceListItemData)iter.next();
+			if (flag) {
+				iter.remove();
+			} else {
+				if (data.title.equals(title)) {
+					iter.remove(); //find the first same one.
+					flag = true;
+				}
+			}
+		}
+		
+		return dataList;
+	}
+	
+	/**
+	 * update the download status
+	 * @param id voice id
+	 * @param isDownload 
+	 * @param filePath mp3 file path
+	 */
 	public void updateDownloadStatus(String id, int isDownload, String filePath){
 		ContentValues newValues = new ContentValues();
 		newValues.put(KEY_IS_DOWNLOAD_COLUMN, isDownload);

@@ -20,11 +20,18 @@ import time.goes.by.data.VoiceListItemData;
 
 /**
  * @author Edison
- *
+ * ½âÎöÍøÒ³µÄµ¥Àý
  */
 public class ParseHtml {
-	public ParseHtml() {
+	private static ParseHtml instance = null;
+	private ParseHtml() {
 		
+	}
+	public static ParseHtml getInstance() {
+		if (instance==null) {
+			instance = new ParseHtml();
+		}
+		return instance;
 	}
 	
 	public List<Object> getDownloadDataList(String urlStr){
@@ -77,7 +84,7 @@ public class ParseHtml {
      * @param contentURL
      * @return
      */
-    public static String getVoiceMP3Url(String contentURL){
+    public String getVoiceMP3Url(String contentURL){
     	String mp3URL = null;
     	Document doc = null;
 		try {

@@ -24,4 +24,7 @@ public class VoiceDataBaseDefine {
 	public static final String KEY_CONTENT_URL_COLUMN = "CONTENT_URL";
 	public static final String KEY_LRC_URL_COLUMN = "LRC_URL";
 	public static final String KEY_TRANSLATE_URL_COLUMN = "TRANSLATE_URL";
+	
+	public static final int DOWNLOAD_STATUS_YES = 1;
+	public static final int DOWNLOAD_STATUS_NO = 0;
 }
