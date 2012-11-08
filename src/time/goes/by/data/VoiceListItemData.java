@@ -48,7 +48,8 @@ public class VoiceListItemData implements Parcelable{
 
 	public String saveContentFile() {
 		String content = ParseHtml.getInstance().getVoiceDoc(contentURL);
-		String fileName = FileHelper.APP_PATH_DOC + title;
+		// .html is needed ohterwiese webview will throw StringIndexOutOfBoundsException
+		String fileName = FileHelper.APP_PATH_DOC + title + ".html";
 		FileHelper.writeToFile(content, fileName);
 		return fileName;
 	}
